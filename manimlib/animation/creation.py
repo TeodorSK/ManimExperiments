@@ -1,10 +1,15 @@
 from manimlib.animation.animation import Animation
+from manimlib.animation.composition import Succession
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
+
+import numpy as np
+import itertools as it
 
 
 class ShowPartial(Animation):
@@ -64,10 +69,11 @@ class DrawBorderThenFill(Animation):
     def get_outline(self):
         outline = self.mobject.copy()
         outline.set_fill(opacity=0)
-        outline.set_stroke(
-            color=self.get_stroke_color(outline),
-            width=self.stroke_width
-        )
+        for sm in outline.family_members_with_points():
+            sm.set_stroke(
+                color=self.get_stroke_color(sm),
+                width=self.stroke_width
+            )
         return outline
 
     def get_stroke_color(self, vmobject):
@@ -119,6 +125,7 @@ class Write(DrawBorderThenFill):
 class ShowIncreasingSubsets(Animation):
     CONFIG = {
         "suspend_mobject_updating": False,
+        "int_func": np.floor,
     }
 
     def __init__(self, group, **kwargs):
@@ -127,5 +134,43 @@ class ShowIncreasingSubsets(Animation):
 
     def interpolate_mobject(self, alpha):
         n_submobs = len(self.all_submobs)
-        index = int(alpha * n_submobs)
+        index = int(self.int_func(alpha * n_submobs))
+        self.update_submobject_list(index)
+
+    def update_submobject_list(self, index):
         self.mobject.submobjects = self.all_submobs[:index]
+
+
+class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
+    def __init__(self, group, **kwargs):
+        new_group = Group(*group)
+        super().__init__(new_group, **kwargs)
+
+    def update_submobject_list(self, index):
+        # N = len(self.all_submobs)
+        if index == 0:
+            self.mobject.submobjects = []
+        else:
+            self.mobject.submobjects = self.all_submobs[index - 1]
+
+
+# TODO, this is broken...
+class AddTextWordByWord(Succession):
+    CONFIG = {
+        # If given a value for run_time, it will
+        # override the time_per_char
+        "run_time": None,
+        "time_per_char": 0.06,
+    }
+
+    def __init__(self, text_mobject, **kwargs):
+        digest_config(self, kwargs)
+        tpc = self.time_per_char
+        anims = it.chain(*[
+            [
+                ShowIncreasingSubsets(word, run_time=tpc * len(word)),
+                Animation(word, run_time=0.005 * len(word)**1.5),
+            ]
+            for word in text_mobject
+        ])
+        super().__init__(*anims, **kwargs)

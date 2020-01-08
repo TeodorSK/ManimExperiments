@@ -95,9 +95,10 @@ class NumberLine(Line):
         )
 
     def get_tick_numbers(self):
+        u = -1 if self.include_tip else 1
         return np.arange(
             self.leftmost_tick,
-            self.x_max - self.tick_frequency / 2,
+            self.x_max + u * self.tick_frequency / 2,
             self.tick_frequency
         )
 
@@ -121,13 +122,24 @@ class NumberLine(Line):
         )
         return interpolate(self.x_min, self.x_max, proportion)
 
+    def n2p(self, number):
+        """Abbreviation for number_to_point"""
+        return self.number_to_point(number)
+
+    def p2n(self, point):
+        """Abbreviation for point_to_number"""
+        return self.point_to_number(point)
+
     def get_unit_size(self):
         return (self.x_max - self.x_min) / self.get_length()
 
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
             return self.numbers_to_show
-        numbers = np.arange(int(self.leftmost_tick), int(self.x_max))
+        numbers = np.arange(
+            np.floor(self.leftmost_tick),
+            np.ceil(self.x_max),
+        )
         if self.exclude_zero_from_default_numbers:
             numbers = numbers[numbers != 0]
         return numbers
@@ -141,8 +153,10 @@ class NumberLine(Line):
             self.decimal_number_config,
             number_config or {},
         )
-        scale_val = scale_val or self.number_scale_val
-        direction = direction or self.label_direction
+        if scale_val is None:
+            scale_val = self.number_scale_val
+        if direction is None:
+            direction = self.label_direction
         buff = buff or self.line_to_number_buff
 
         num_mob = DecimalNumber(number, **number_config)
@@ -181,4 +195,7 @@ class UnitInterval(NumberLine):
         "tick_frequency": 0.1,
         "numbers_with_elongated_ticks": [0, 1],
         "number_at_center": 0.5,
+        "decimal_number_config": {
+            "num_decimal_places": 1,
+        }
     }

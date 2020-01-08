@@ -1,0 +1,2 @@
+file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/BasicEquations/00000.mp4'
+file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/BasicEquations/00001.mp4'

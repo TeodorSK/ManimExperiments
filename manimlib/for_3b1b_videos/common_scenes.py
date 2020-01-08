@@ -102,7 +102,7 @@ class PatreonThanks(Scene):
         patreon_logo = PatreonLogo()
         patreon_logo.to_edge(UP)
 
-        patrons = list(map(TextMobject, self.specific_patrons))
+        patrons = list(map(TextMobject, self.specific_patronds))
         num_groups = float(len(patrons)) / self.max_patron_group_size
         proportion_range = np.linspace(0, 1, num_groups + 1)
         indices = (len(patrons) * proportion_range).astype('int')
@@ -148,13 +148,13 @@ class PatreonThanks(Scene):
 
 class PatreonEndScreen(PatreonThanks, PiCreatureScene):
     CONFIG = {
-        "n_patron_columns": 3,
-        "max_patron_width": 3.5,
+        "n_patron_columns": 4,
+        "max_patron_width": 5,
         "run_time": 20,
         "randomize_order": True,
         "capitalize": True,
         "name_y_spacing": 0.7,
-        "thanks_words": "Funded by the community, with special thanks to:",
+        "thanks_words": "My thanks to all the patrons among you",
     }
 
     def construct(self):
@@ -189,7 +189,6 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
     def scroll_through_patrons(self):
         logo_box = Square(side_length=2.5)
         logo_box.to_corner(DOWN + LEFT, buff=MED_LARGE_BUFF)
-        total_width = FRAME_X_RADIUS - logo_box.get_right()[0]
 
         black_rect = Rectangle(
             fill_color=BLACK,
@@ -213,7 +212,15 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         underline.next_to(thanks, DOWN, SMALL_BUFF)
         thanks.add(underline)
 
-        patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
+        changed_patron_names = list(map(
+            self.modify_patron_name,
+            self.specific_patrons,
+        ))
+        changed_patron_names.sort()
+        patrons = VGroup(*map(
+            TextMobject,
+            changed_patron_names,
+        ))
         patrons.scale(self.patron_scale_val)
         for patron in patrons:
             if patron.get_width() > self.max_patron_width:
@@ -229,17 +236,15 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
         )
-        if columns.get_width() > self.max_patron_width:
-            columns.set_width(total_width - 1)
-
-        thanks.to_edge(RIGHT)
-        columns.next_to(thanks, DOWN, 3 * LARGE_BUFF)
+        max_width = FRAME_WIDTH - 1
+        if columns.get_width() > max_width:
+            columns.set_width(max_width)
+        underline.match_width(columns)
+        # thanks.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+        columns.next_to(underline, DOWN, buff=2)
 
         columns.generate_target()
-        columns.target.move_to(2 * DOWN, DOWN)
-        columns.target.align_to(
-            thanks, alignment_vect=RIGHT
-        )
+        columns.target.to_edge(DOWN, buff=4)
         vect = columns.target.get_center() - columns.get_center()
         distance = get_norm(vect)
         wait_time = 20
@@ -251,6 +256,18 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
 
         self.add(columns, black_rect, line, thanks)
         self.wait(wait_time)
+
+    def modify_patron_name(self, name):
+        modification_map = {
+            "RedAgent14": "Brian Shepetofsky",
+            "DeathByShrimp": "Henry Bresnahan",
+            "akostrikov": "Aleksandr Kostrikov",
+            "Jacob Baxter": "Will Fleshman",
+        }
+        for n1, n2 in modification_map.items():
+            if name.lower() == n1.lower():
+                return n2
+        return name
 
 
 class LogoGenerationTemplate(MovingCameraScene):

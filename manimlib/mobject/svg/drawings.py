@@ -1,4 +1,5 @@
 import itertools as it
+import string
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.rotation import Rotating
@@ -212,12 +213,15 @@ class Laptop(VGroup):
             "fill_color": BLACK,
             "fill_opacity": 1,
         },
+        "fill_opacity": 1,
+        "stroke_width": 0,
         "body_color": LIGHT_GREY,
         "shaded_body_color": GREY,
         "open_angle": np.pi / 4,
     }
 
-    def generate_points(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         body = Cube(side_length=1)
         for dim, scale_factor in enumerate(self.body_dimensions):
             body.stretch(scale_factor, dim=dim)
@@ -346,7 +350,7 @@ class Clock(VGroup):
     CONFIG = {}
 
     def __init__(self, **kwargs):
-        circle = Circle()
+        circle = Circle(color=WHITE)
         ticks = []
         for x in range(12):
             alpha = x / 12.
@@ -390,11 +394,13 @@ class ClockPassesTime(Animation):
             radians=hour_radians,
             **rot_kwargs
         )
+        self.hour_rotation.begin()
         self.minute_rotation = Rotating(
             clock.minute_hand,
             radians=12 * hour_radians,
             **rot_kwargs
         )
+        self.minute_rotation.begin()
         Animation.__init__(self, clock, **kwargs)
 
     def interpolate_mobject(self, alpha):
@@ -430,7 +436,7 @@ class Bubble(SVGMobject):
         self.stretch_to_fit_height(self.height)
         self.stretch_to_fit_width(self.width)
         if self.direction[0] > 0:
-            Mobject.flip(self)
+            self.flip()
         self.direction_was_specified = ("direction" in kwargs)
         self.content = Mobject()
 
@@ -443,12 +449,16 @@ class Bubble(SVGMobject):
         return self.get_center() + factor * self.get_height() * UP
 
     def move_tip_to(self, point):
-        VGroup(self, self.content).shift(point - self.get_tip())
+        mover = VGroup(self)
+        if self.content is not None:
+            mover.add(self.content)
+        mover.shift(point - self.get_tip())
         return self
 
-    def flip(self):
-        Mobject.flip(self)
-        self.direction = -np.array(self.direction)
+    def flip(self, axis=UP):
+        Mobject.flip(self, axis=axis)
+        if abs(axis[1]) > 0:
+            self.direction = -np.array(self.direction)
         return self
 
     def pin_to(self, mobject):
@@ -824,10 +834,7 @@ class Logo(VMobject):
         return blue_part, brown_part
 
 
-
 # Cards
-
-
 class DeckOfCards(VGroup):
     def __init__(self, **kwargs):
         possible_values = list(map(str, list(range(1, 11)))) + ["J", "Q", "K"]

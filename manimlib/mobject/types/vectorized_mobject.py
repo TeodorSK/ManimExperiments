@@ -202,6 +202,7 @@ class VMobject(Mobject):
             )
         if background_image_file:
             self.color_using_background_image(background_image_file)
+        return self
 
     def get_style(self):
         return {
@@ -209,8 +210,10 @@ class VMobject(Mobject):
             "fill_opacity": self.get_fill_opacities(),
             "stroke_color": self.get_stroke_colors(),
             "stroke_width": self.get_stroke_width(),
+            "stroke_opacity": self.get_stroke_opacity(),
             "background_stroke_color": self.get_stroke_colors(background=True),
             "background_stroke_width": self.get_stroke_width(background=True),
+            "background_stroke_opacity": self.get_stroke_opacity(background=True),
             "sheen_factor": self.get_sheen_factor(),
             "sheen_direction": self.get_sheen_direction(),
             "background_image_file": self.get_background_image_file(),
@@ -239,20 +242,24 @@ class VMobject(Mobject):
     def set_opacity(self, opacity, family=True):
         self.set_fill(opacity=opacity, family=family)
         self.set_stroke(opacity=opacity, family=family)
+        self.set_stroke(opacity=opacity, family=family, background=True)
         return self
 
     def fade(self, darkness=0.5, family=True):
         factor = 1.0 - darkness
         self.set_fill(
-            opacity=factor * self.get_fill_opacity()
+            opacity=factor * self.get_fill_opacity(),
+            family=False,
         )
         self.set_stroke(
-            opacity=factor * self.get_stroke_opacity()
+            opacity=factor * self.get_stroke_opacity(),
+            family=False,
         )
         self.set_background_stroke(
             opacity=factor * self.get_stroke_opacity(
                 background=True
-            )
+            ),
+            family=False,
         )
         super().fade(darkness, family)
         return self
@@ -571,6 +578,8 @@ class VMobject(Mobject):
         again.
         """
         for submob in self.family_members_with_points():
+            if len(submob.points) < self.n_points_per_cubic_curve:
+                continue
             a1, h1, h2, a2 = submob.get_anchors_and_handles()
             a1_to_h1 = h1 - a1
             a2_to_h2 = h2 - a2
@@ -832,6 +841,8 @@ class VMobject(Mobject):
         upper_index, upper_residue = integer_interpolate(0, num_cubics, b)
 
         self.clear_points()
+        if num_cubics == 0:
+            return self
         if lower_index == upper_index:
             self.append_points(partial_bezier_points(
                 bezier_quads[lower_index],
@@ -910,22 +921,22 @@ class DashedVMobject(VMobject):
         VMobject.__init__(self, **kwargs)
         num_dashes = self.num_dashes
         ps_ratio = self.positive_space_ratio
+        if num_dashes > 0:
+            # End points of the unit interval for division
+            alphas = np.linspace(0, 1, num_dashes + 1)
 
-        # End points of the unit interval for division
-        alphas = np.linspace(0, 1, num_dashes + 1)
+            # This determines the length of each "dash"
+            full_d_alpha = (1.0 / num_dashes)
+            partial_d_alpha = full_d_alpha * ps_ratio
 
-        # This determines the length of each "dash"
-        full_d_alpha = (1.0 / num_dashes)
-        partial_d_alpha = full_d_alpha * ps_ratio
+            # Rescale so that the last point of vmobject will
+            # be the end of the last dash
+            alphas /= (1 - full_d_alpha + partial_d_alpha)
 
-        # Rescale so that the last point of vmobject will
-        # be the end of the last dash
-        alphas /= (1 - full_d_alpha + partial_d_alpha)
-
-        self.add(*[
-            vmobject.get_subcurve(alpha, alpha + partial_d_alpha)
-            for alpha in alphas[:-1]
-        ])
+            self.add(*[
+                vmobject.get_subcurve(alpha, alpha + partial_d_alpha)
+                for alpha in alphas[:-1]
+            ])
         # Family is already taken care of by get_subcurve
         # implementation
         self.match_style(vmobject, family=False)

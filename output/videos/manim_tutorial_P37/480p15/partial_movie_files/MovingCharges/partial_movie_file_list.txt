@@ -1,0 +1,4 @@
+file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/MovingCharges/00000.mp4'
+file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/MovingCharges/00001.mp4'
+file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/MovingCharges/00002.mp4'
+file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/MovingCharges/00003.mp4'

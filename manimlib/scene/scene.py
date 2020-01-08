@@ -1,6 +1,7 @@
 import inspect
 import random
 import warnings
+import platform
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -288,7 +289,7 @@ class Scene(Container):
         for i, mob in enumerate(mobjects):
             update_possibilities = [
                 mob in animation_mobjects,
-                len(mob.get_updaters()) > 0,
+                len(mob.get_family_updaters()) > 0,
                 mob in self.foreground_mobjects
             ]
             if any(update_possibilities):
@@ -304,6 +305,7 @@ class Scene(Container):
         time_progression = ProgressDisplay(
             times, total=n_iterations,
             leave=self.leave_progress_bars,
+            ascii=False if platform.system() != 'Windows' else True
         )
         return time_progression
 
@@ -493,17 +495,19 @@ class Scene(Container):
 
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        dt = 1 / self.camera.frame_rate
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.should_update_mobjects():
             time_progression = self.get_wait_time_progression(duration, stop_condition)
             # TODO, be smart about setting a static image
             # the same way Scene.play does
+            last_t = 0
             for t in time_progression:
+                dt = t - last_t
+                last_t = t
                 self.update_mobjects(dt)
                 self.update_frame()
                 self.add_frames(self.get_frame())
-                if stop_condition and stop_condition():
+                if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
         elif self.skip_animations:
@@ -511,6 +515,7 @@ class Scene(Container):
             return self
         else:
             self.update_frame()
+            dt = 1 / self.camera.frame_rate
             n_frames = int(duration / dt)
             frame = self.get_frame()
             self.add_frames(*[frame] * n_frames)
@@ -538,6 +543,8 @@ class Scene(Container):
             self.file_writer.write_frame(frame)
 
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
+        if self.skip_animations:
+            return
         time = self.get_time() + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
 

@@ -33,6 +33,7 @@ class AnimationGroup(Animation):
             self.group = Group(*remove_list_redundancies(
                 [anim.mobject for anim in animations]
             ))
+        self.init_run_time()
         Animation.__init__(self, self.group, **kwargs)
 
     def get_all_mobjects(self):
@@ -41,7 +42,7 @@ class AnimationGroup(Animation):
     def begin(self):
         for anim in self.animations:
             anim.begin()
-        self.init_run_time()
+        # self.init_run_time()
 
     def finish(self):
         for anim in self.animations:
@@ -151,8 +152,11 @@ class LaggedStartMap(LaggedStart):
                 args_list.append(arg_creator(submob))
             else:
                 args_list.append((submob,))
+        anim_kwargs = dict(kwargs)
+        if "lag_ratio" in anim_kwargs:
+            anim_kwargs.pop("lag_ratio")
         animations = [
-            AnimationClass(*args, **kwargs)
+            AnimationClass(*args, **anim_kwargs)
             for args in args_list
         ]
         super().__init__(*animations, **kwargs)

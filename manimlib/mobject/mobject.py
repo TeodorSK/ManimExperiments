@@ -4,10 +4,12 @@ import itertools as it
 import operator as op
 import os
 import random
+import sys
 
 from colour import Color
 import numpy as np
 
+import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
@@ -108,7 +110,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(VIDEO_DIR, (name or str(self)) + ".png")
+            os.path.join(consts.VIDEO_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):
@@ -172,6 +174,12 @@ class Mobject(Container):
     def get_updaters(self):
         return self.updaters
 
+    def get_family_updaters(self):
+        return list(it.chain(*[
+            sm.get_updaters()
+            for sm in self.get_family()
+        ]))
+
     def add_updater(self, update_function, index=None, call_updater=True):
         if index is None:
             self.updaters.append(update_function)
@@ -191,6 +199,12 @@ class Mobject(Container):
         if recursive:
             for submob in self.submobjects:
                 submob.clear_updaters()
+        return self
+
+    def match_updaters(self, mobject):
+        self.clear_updaters()
+        for updater in mobject.get_updaters():
+            self.add_updater(updater)
         return self
 
     def suspend_updating(self, recursive=True):
@@ -256,6 +270,12 @@ class Mobject(Container):
             return points
         self.apply_points_function_about_point(func, **kwargs)
         return self
+
+    def pop(self, **kwargs):
+        self.stretch(2, 0)
+        self.stretch(2, 1)
+        return self
+
 
     def apply_function(self, function, **kwargs):
         # Default to applying matrix about the origin, not mobjects center
@@ -957,12 +977,6 @@ class Mobject(Container):
                 submob.shuffle(recursive=True)
         random.shuffle(self.submobjects)
 
-    def print_family(self, n_tabs=0):
-        """For debugging purposes"""
-        print("\t" * n_tabs, self, id(self))
-        for submob in self.submobjects:
-            submob.print_family(n_tabs + 1)
-
     # Just here to keep from breaking old scenes.
     def arrange_submobjects(self, *args, **kwargs):
         return self.arrange(*args, **kwargs)
@@ -1074,6 +1088,7 @@ class Mobject(Container):
             mobject1.points, mobject2.points, alpha
         )
         self.interpolate_color(mobject1, mobject2, alpha)
+        return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         pass  # To implement in subclass
@@ -1106,7 +1121,7 @@ class Mobject(Container):
     # Errors
     def throw_error_if_no_points(self):
         if self.has_no_points():
-            message = "Cannot call Mobject.{}" +\
+            message = "Cannot call Mobject.{} " +\
                       "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
             raise Exception(message.format(caller_name))
