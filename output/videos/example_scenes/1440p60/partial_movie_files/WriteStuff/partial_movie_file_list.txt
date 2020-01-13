@@ -1,3 +1,0 @@
-file '/Users/tsk/manim/output/videos/example_scenes/1440p60/partial_movie_files/WriteStuff/00000.mp4'
-file '/Users/tsk/manim/output/videos/example_scenes/1440p60/partial_movie_files/WriteStuff/00001.mp4'
-file '/Users/tsk/manim/output/videos/example_scenes/1440p60/partial_movie_files/WriteStuff/00002.mp4'

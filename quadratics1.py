@@ -17,12 +17,15 @@ class VertexFormRoots(GraphScene):
             lambda x: 2*(x+1)**2-3],
         "color_main" : YELLOW,
         "center_point" : 0,
-        "x_min" : -3,
-        "x_max" : 3,
+        "x_min" : -6,
+        "x_max" : 4,
         "y_min" : -5,
         "y_max" : 5,
-        "graph_origin" : 2*LEFT,
-        "x_labeled_nums" : range(-6, 4, 2),
+        "graph_origin" : 4*LEFT+1*UP,
+        "y_axis_height": 4,
+        "x_axis_width": 4,
+        # "x_labeled_nums" : range(-2, 4, 2),
+        "area_opacity": 0.2,
     }
 
     #do i rly have to implement this myself
@@ -137,6 +140,17 @@ class VertexFormRoots(GraphScene):
 
             self.play(MoveToTarget(eqn1))
 
+    def division_tween(self):
+        #DivisionTween
+        test_eq1 = TexMobject("3","=","2","x")
+        test_eq2 = TexMobject("{3", "\\over", "2}", "=", "x")
+        self.play(Write(test_eq1))
+        self.play(
+            ApplyMethod(test_eq1[0].replace,test_eq2[0]),
+            ApplyMethod(test_eq1[1].replace,test_eq2[3]),
+            ApplyMethod(test_eq1[2].replace,test_eq2[2],path_arc=-1*np.pi),
+            ApplyMethod(test_eq1[3].replace,test_eq2[4]),
+            FadeIn(test_eq2[1]))
 
     def construct(self):
 
@@ -154,18 +168,35 @@ class VertexFormRoots(GraphScene):
         eq3 = TexMobject("\pm \sqrt{4}", "=", "x")
         eq4_pos = TexMobject("x = 2")
         eq4_neg = TexMobject("x = -2")
+        #arrange equations into groups to apply scale/location
         eq_group1 = VGroup(eq1, eq2, eq2_zero, eq3_pre, eq3, eq4_pos, eq4_neg)
         eq_group1.scale(1.5)
         eq_group1.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
-        eq_group1.move_to(UP*0.5+4.5*RIGHT)
+        eq_group1.move_to(UP*0.5+3.5*RIGHT)
 
+        eq1_copy = eq1.copy()
         eq5 = TexMobject("y=2x^2")
         eq5_2 = TexMobject("y=2(x+1)^2")
         eq5_3 = TexMobject("y=2(x+1)^2-3")
+        eq5_zero = TexMobject("0","=2(x+1)^2","-","3")
+        eq6 = TexMobject("3=2(x+1)^2")
+        eq7 = TexMobject("\dfrac{3}{2}=(x+1)^2")
+        eq8 = TexMobject("\pm\sqrt { \dfrac { 3 }{ 2 }  }  = x+1")
+        eq9_1 = TexMobject("-1.225-1=x")
+        eq9_2 = TexMobject("1.225-1=x")
+        eq10_1 = TexMobject("-2.225=x")
+        eq10_2 = TexMobject("0.225=x")
         eq_group2 = VGroup (eq5, eq5_2, eq5_3)
         eq_group2.scale(1.5)
-        eq_group2. arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
-        eq_group2.move_to(UP*0.5+4.5*RIGHT)
+        eq_group2.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        eq_group2.move_to(UP*0.5+3.5*RIGHT)
+        eq5_3.shift(LEFT)
+        eq_group3 = VGroup (eq5_zero, eq6, eq7, eq8, eq9_1, eq9_2, eq10_1, eq10_2)
+        eq_group3.scale(1.5)
+        eq_group3.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+
+        eq_group4 = eq_group3[4:]
+
 
 
         #graphs
@@ -182,14 +213,16 @@ class VertexFormRoots(GraphScene):
         graph5 = self.get_graph(self.functions[5],self.color_main)
         root_highlight3 = Dot().move_to(self.input_to_graph_point(-2.225,graph5))
         root_highlight4 = Dot().move_to(self.input_to_graph_point(0.225,graph5))
+        root3_label = TexMobject("-2.255, 0").set_color(RED).next_to(root_highlight3, UP).shift(LEFT)
+        root4_label = TexMobject("0.255, 0").set_color(RED).next_to(root_highlight4, UP).shift(RIGHT)
 
 
         #play
         self.play(Write(eq1), ShowCreation(graph1))
-        self.play(Transform(eq1,eq2),Transform(graph1, graph2))
+        self.play(ReplacementTransform(eq1,eq2),ReplacementTransform(graph1, graph2))
         self.play(ReplacementTransform(eq2.copy(), eq2_zero),FadeIn(root_highlight1), FadeIn(root_highlight2))
         self.play(ShowCreation(x_axis), ApplyMethod(eq2_zero[0].set_color, RED))
-        self.play(
+        self.play( #tween
             ApplyMethod(
             eq2_zero[4].replace, eq2_zero[0],
             path_arc = -1*np.pi,
@@ -224,6 +257,7 @@ class VertexFormRoots(GraphScene):
 
         #part 2 Play
         #TODO: fix: elements that are already faded out (red zero) flash before fading out again
+        #Current fix: make a copy of the tweened equation, remove orginal, fadeout copy
         self.play(
             FadeOut(eq_group1),
             FadeOut(graph2),
@@ -233,15 +267,61 @@ class VertexFormRoots(GraphScene):
             FadeOut(root2_label),)
 
         #TODO: graph1, eq1 got replaced earlier. reset them
-        self.play(ShowCreation(graph1), Write(eq1))
+        graph1 = self.get_graph(self.functions[0],self.color_main)
+        # eq1 = self.change_text(eq5.copy(), "x^2")
+
+        self.play(ShowCreation(graph1), Write(eq1_copy))
         #TODO: graph3->4 weird path of transformation. make smooth right to left
-        self.play(ReplacementTransform(graph1, graph3), ReplacementTransform(eq1, eq5))
+        self.play(ReplacementTransform(graph1, graph3), ReplacementTransform(eq1_copy, eq5))
         self.play(ReplacementTransform(graph3, graph4), ReplacementTransform(eq5, eq5_2))
         self.play(ReplacementTransform(graph4, graph5), ReplacementTransform(eq5_2, eq5_3))
+        self.play(ApplyMethod(eq5_3.shift, 3.5*UP))
+        eq_group3.next_to(eq5_3,DOWN)
+        self.play(
+            ReplacementTransform(eq5_3.copy(), eq5_zero),
+            FadeIn(root_highlight3),
+            FadeIn(root_highlight4))
+        self.play(ShowCreation(x_axis), ApplyMethod(eq5_zero[0].set_color, RED))
+        # self.play(ReplacementTransform(eq5_zero, eq6)) #apply tween here?
+        self.play( #tween
+            ApplyMethod(
+            eq5_zero[3].replace, eq5_zero[0],
+            path_arc = -1*np.pi,
+            rate_func=smooth,
+            run_time = 1.5
+            ),
+            FadeOut(eq5_zero[2]),
+            FadeOut(eq5_zero[0]),
+            FadeOut(x_axis)
+        )
+        eq_group3[1:].shift(UP)
+        eq6.move_to(eq5_zero, LEFT)
+        self.play(ReplacementTransform(eq6, eq7))
+        self.play(ReplacementTransform(eq7, eq8))
+        eq_group4.shift(3*UP)
+        self.remove(*eq5_zero)
+        eq5_zero = self.change_text(eq5_zero, "3=2(x+1)^2").shift(LEFT*0.4)
 
+        self.play(ApplyMethod(eq8.shift, 4*UP),FadeOut(eq5_3), FadeOut(eq5_zero))
+        eq9_1.shift(LEFT*3)
+        eq9_2.next_to(eq9_1, RIGHT)
+        self.play(ReplacementTransform(eq8.copy(), eq9_1))
+        eq10_1.move_to(eq9_1)
+        self.play(ReplacementTransform(eq9_1, eq10_1))
+        self.play(ReplacementTransform(eq8.copy(), eq9_2))
+        eq10_2.move_to(eq9_2)
+        self.play(ReplacementTransform(eq9_2, eq10_2))
 
-
-
+        self.play(
+            ApplyMethod(eq10_1.set_color, RED),
+            ApplyMethod(eq10_2.set_color, RED))
+        self.play(
+            ApplyMethod(root_highlight3.set_color, RED),
+            ApplyMethod(root_highlight4.set_color, RED),
+            ReplacementTransform(eq10_1.copy(),root_highlight3),
+            ReplacementTransform(eq10_2.copy(),root_highlight4),
+            )
+        self.play(Write(root3_label),Write(root4_label))
 
 
 

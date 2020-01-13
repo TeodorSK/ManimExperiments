@@ -1,0 +1,4 @@
+file '/Users/tsk/manim/output/videos/4_transform/480p15/partial_movie_files/CopyTwoFormulas1/00000.mp4'
+file '/Users/tsk/manim/output/videos/4_transform/480p15/partial_movie_files/CopyTwoFormulas1/00001.mp4'
+file '/Users/tsk/manim/output/videos/4_transform/480p15/partial_movie_files/CopyTwoFormulas1/00002.mp4'
+file '/Users/tsk/manim/output/videos/4_transform/480p15/partial_movie_files/CopyTwoFormulas1/00003.mp4'

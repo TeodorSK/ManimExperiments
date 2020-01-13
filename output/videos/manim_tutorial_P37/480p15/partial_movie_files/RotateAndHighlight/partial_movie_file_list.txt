@@ -1,3 +1,0 @@
-file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/RotateAndHighlight/00000.mp4'
-file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/RotateAndHighlight/00001.mp4'
-file '/Users/tsk/manim/output/videos/manim_tutorial_P37/480p15/partial_movie_files/RotateAndHighlight/00002.mp4'
