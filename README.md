@@ -2,6 +2,7 @@
 Experimenting with 3b1b animation engine
 
 To run animations:
+
 0. start virtual environment with 
   source venv/bin/activate
 1. run 
