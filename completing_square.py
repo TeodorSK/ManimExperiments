@@ -192,11 +192,20 @@ class Completing1(Scene):
     }
     def construct(self):
         std_pattern = TexMobject("u","^2","+","2","u","v","+","v","^2").shift(UP)
+        std_simple = TexMobject("(","u","+","v",")","^2").shift(UP)
         middle_term_uv = TexMobject("2","u","v").next_to(std_pattern[4],3*UP).scale(1.5)
+        middle_term_uv_vsq = TexMobject("v^2").move_to(middle_term_uv[2]).scale(1.5)
         vert_pattern = TexMobject("(","u","+","v",")","^2")
         eq = TexMobject("x","^2","+","6","x","+","5").next_to(std_pattern,DOWN, buff=LARGE_BUFF)
+        eq_21 = TexMobject("x","^2","+","6","x","+","3^2", "+","5").move_to(eq).align_to(eq,LEFT)
+        eq_22 = TexMobject("x","^2","+","6","x","+","3^2", "-","3^2","+","5").move_to(eq).align_to(eq,LEFT)
+        eq_2s = TexMobject("x","^2","+","6","x","+","9", "-","4").move_to(eq).align_to(eq,LEFT)
+        eq_fin = TexMobject("(","x","+","3",")","^2","-","4").move_to(eq).align_to(eq,LEFT)
         middle_term_eq = TexMobject("6","x").next_to(eq[4],3*DOWN+0.5*LEFT).scale(1.5)
+        middle_term_eq2 = TexMobject("2","\cdot","3","\cdot","x").move_to(middle_term_eq).scale(1.5)
+        middle_term_3sq = TexMobject("3^2").move_to(middle_term_eq2[2]).scale(1.5)
         question = TextMobject("???").next_to(std_pattern[7],DOWN*1.6)
+        yay = TextMobject("Yay!").next_to(eq,2*DOWN).scale(1.5).set_color(GREEN)
 
         self.play(Write(eq))
         self.play(Write(std_pattern))
@@ -229,9 +238,59 @@ class Completing1(Scene):
             ApplyMethod(std_pattern[7:9].set_color,DARK_GREY),
         )
 
-        # self.play(Write(middle_term_eq),Write(middle_term_uv))
+        #isolate b
         self.play(ReplacementTransform(std_pattern[3:6].copy(), middle_term_uv),)
         self.play(ReplacementTransform(eq[3:5].copy(), middle_term_eq),)
+        self.play(ReplacementTransform(middle_term_eq, middle_term_eq2))
+
+        self.play(FadeOut(middle_term_eq2[0:2]),FadeOut(middle_term_uv[0:1]))
+        self.play(FadeOut(middle_term_eq2[3:5]),FadeOut(middle_term_uv[1:2]))
+        self.play(ReplacementTransform(middle_term_uv[2],middle_term_uv_vsq))
+        self.play(ReplacementTransform(middle_term_eq2[2],middle_term_3sq))
+
+        #match v^2 pattern
+        self.play(ApplyMethod(middle_term_uv_vsq.replace,std_pattern[7:9]),path_arc=-1*np.pi)
+
+        #add-sub 3^2
+        self.play(
+            ApplyMethod(eq[6].set_color,WHITE),
+            ApplyMethod(std_pattern[:7].set_color,DARK_GREY),
+            FadeOut(middle_term_uv_vsq))
+        # self.remove(middle_term_uv_vsq)
+        self.play(
+            ReplacementTransform(middle_term_3sq.copy(),eq_21[6],path_arc=np.pi),
+            ReplacementTransform(eq[6],eq_21[8]))
+        self.play(
+            ReplacementTransform(eq_21[8],eq_22[10]),
+            ReplacementTransform(middle_term_3sq.copy(),eq_22[8],path_arc=np.pi),
+            ReplacementTransform(eq_21[7],eq_22[7]),
+            FadeIn(eq_22[9]))
+
+        #simplify
+        self.remove(eq_21[6])
+        self.play(
+            ReplacementTransform(eq_22[6],eq_2s[6]),
+            ReplacementTransform(eq_22[7:11],eq_2s[7:9]),
+            FadeOut(middle_term_3sq))
+
+        #highlight trinomial
+        self.play(ApplyMethod(std_pattern.set_color,WHITE))
+        self.play(
+            ApplyMethod(std_pattern.set_color,RED),
+            ApplyMethod(eq_2s[0:7].set_color,RED),
+        )
+
+        self.play(ReplacementTransform(std_pattern,std_simple))
+        self.remove(*eq_21)
+        self.remove(*eq_22)
+        self.remove(*eq)
+        self.play(
+            ReplacementTransform(eq_2s[0:7],eq_fin[0:6]),
+            ReplacementTransform(eq_2s[7:9],eq_fin[6:8])
+        )
+        self.play(ApplyMethod(eq_fin.set_color,GREEN))
+        self.play(Write(yay),FadeOut(std_simple))
+
 
 
 if __name__ == "__main__":
